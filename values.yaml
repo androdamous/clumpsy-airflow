@@ -1,0 +1,45 @@
+# values.yaml - Apache Airflow Helm Chart configuration
+# Using KubernetesExecutor and exposing the webserver on port 8080
+
+# Set the executor type to KubernetesExecutor
+executor: "KubernetesExecutor"
+
+# Airflow container image configuration
+airflow:
+  image:
+    repository: "apache/airflow"
+    tag: "2.6.0"  # Change to your desired Airflow version
+  # Additional Airflow configuration can be defined here.
+  config: |
+    [core]
+    executor = KubernetesExecutor
+    # (Optional) Add more core settings here (e.g., SQL Alchemy connection string)
+
+# Webserver configuration: expose the service on port 8080
+web:
+  service:
+    # Choose the type based on your environment.
+    # Use "LoadBalancer" for cloud environments or "NodePort" for on-prem/local testing.
+    type: NodePort
+    port: 8080     # This is the port your Airflow web UI will be exposed on.
+    nodePort: 32080  # Optional: external port on the node for NodePort service
+
+# Scheduler settings
+scheduler:
+  replicas: 1
+
+# Worker settings: define the number of Airflow worker replicas
+workers:
+  replicas: 2
+
+# Service Account configuration (ensures proper RBAC in your cluster)
+serviceAccount:
+  create: true
+  name: "airflow"
+
+# Flower (optional monitoring tool) configuration
+flower:
+  enabled: false
+
+# Additional configurations such as resource limits, persistence, and logging can be added as needed.
+resources: {}
