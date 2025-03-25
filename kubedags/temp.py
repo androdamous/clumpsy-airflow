@@ -1,5 +1,6 @@
 from airflow import DAG
 from airflow.providers.apache.spark.operators.spark_kubernetes import SparkKubernetesOperator
+
 from datetime import datetime
 
 default_args = {

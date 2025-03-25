@@ -1,6 +1,3 @@
-from airflow import DAG
-from airflow.providers.cncf.kubernetes.operators.spark_kubernetes import SparkKubernetesOperator
-from datetime import datetime
 from airflow.providers.cncf.kubernetes.operators.spark_kubernetes import SparkKubernetesOperator
 from kubernetes.client.exceptions import ApiException
 from airflow.utils.context import Context
@@ -18,15 +15,13 @@ class CustomSparkKubernetesOperator(SparkKubernetesOperator):
 
     def get_application_name_from_file(self):
         application_content = self.application_file.replace('\t', ' ' * 2)
-        with open(application_content) as f:
-            application_config = yaml.safe_load(f)
+        application_config = yaml.safe_load(application_content)
         return application_config['metadata']['name']
 
     def update_application_name(self):
         timestamp = datetime.now().strftime('%H%M')
         application_content = self.application_file.replace('\t', ' ' * 2)
-        with open(application_content) as f:
-            application_config = yaml.safe_load(f)
+        application_config = yaml.safe_load(application_content)
         application_name = application_config['metadata']['name']
         unique_application_name = f"{application_name}-{timestamp}"
         application_config['metadata']['name'] = unique_application_name
@@ -37,7 +32,7 @@ class CustomSparkKubernetesOperator(SparkKubernetesOperator):
         Deletes any existing SparkApplication with the specified name in the given namespace.
         """
         # Load Kubernetes configuration (inside the cluster or from kubeconfig file)
-        config.load_kube_config()  # Use load_kube_config() if running locally for testing
+        config.load_incluster_config()  # Use load_kube_config() if running locally for testing
  
         # Initialize Kubernetes API client
         api_instance = client.CustomObjectsApi()
@@ -87,20 +82,3 @@ class CustomSparkKubernetesOperator(SparkKubernetesOperator):
             else:
                 # Re-raise other exceptions
                 raise e
-            
-with DAG(
-    dag_id="pyspark_pi_on_k8s",
-    schedule_interval=None,
-    start_date=datetime(2024, 1, 1),
-    catchup=False,
-    tags=["spark", "kubernetes"],
-) as dag:
-    from airflow.utils import yaml
-    with open("/opt/airflow/dags/task.template", "rb") as f:
-        yaml_file = yaml.safe_load(f)
-        submit_pyspark = CustomSparkKubernetesOperator(
-            task_id="submit_spark_pi",
-            namespace="default",
-            application_file="/opt/airflow/dags/task.template",  # path mount trong Airflow container
-            do_xcom_push=False,
-        )
