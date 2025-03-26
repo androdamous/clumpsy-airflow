@@ -7,9 +7,9 @@ spec:
   type: Python
   pythonVersion: "3"
   mode: cluster
-  image: spark:3.5.3
+  image: example_pi
   imagePullPolicy: IfNotPresent
-  mainApplicationFile: local:///opt/spark/example_pi.py
+  mainApplicationFile: local:///opt/spark/app/example_pi.py
   sparkVersion: 3.5.3
   driver:
     cores: 1

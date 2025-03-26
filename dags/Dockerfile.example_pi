@@ -1,0 +1,2 @@
+FROM spark:3.5.3
+COPY example_pi.py /opt/spark/app/example_pi.py
