@@ -9,6 +9,7 @@ if __name__ == "__main__":
     count = sc.parallelize(range(0, num_samples)).filter(
         lambda _: (random.random() ** 2 + random.random() ** 2) < 1
     ).count()
+    raise Exception("loi cua tao")
 
     print(f"Pi is roughly {4.0 * count / num_samples}")
     spark.stop()

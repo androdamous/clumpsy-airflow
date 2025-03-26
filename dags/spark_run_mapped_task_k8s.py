@@ -1,11 +1,10 @@
 from airflow import DAG
+from airflow.decorators import task
 from airflow.providers.cncf.kubernetes.operators.spark_kubernetes import SparkKubernetesOperator
+from airflow.decorators import dag
 from datetime import datetime
-from airflow.providers.cncf.kubernetes.operators.spark_kubernetes import SparkKubernetesOperator
 from kubernetes.client.exceptions import ApiException
-from airflow.utils.context import Context
 from kubernetes import client, config
-from datetime import datetime
 from airflow.utils.decorators import apply_defaults
 import yaml
 import time
@@ -87,22 +86,31 @@ class CustomSparkKubernetesOperator(SparkKubernetesOperator):
             else:
                 # Re-raise other exceptions
                 raise e
-            
+from airflow import DAG
+from airflow.decorators import task
+from airflow.providers.cncf.kubernetes.operators.spark_kubernetes import SparkKubernetesOperator
+from datetime import datetime
+
 with DAG(
-    dag_id="pyspark_pi_on_k8s",
+    dag_id="pyspark_pi_on_k8s_mapped",
     schedule_interval=None,
     start_date=datetime(2024, 1, 1),
     catchup=False,
-    tags=["spark", "kubernetes"],
+    tags=["spark", "kubernetes", "mapped"],
 ) as dag:
-    from airflow.utils import yaml
-    with open("/opt/airflow/dags/task.template", "rb") as f:
-        yaml_file = yaml.safe_load(f)
-        submit_pyspark = CustomSparkKubernetesOperator(
-            task_id="submit_spark_pi",
-            namespace="default",
-            application_file="/opt/airflow/dags/task.template",  # path mount trong Airflow container
-            do_xcom_push=False,
-        )
-        
-        
+
+    @task
+    def list_spark_jobs():
+        return [
+            "/opt/airflow/dags/task.template",
+            "/opt/airflow/dags/task.template",
+            "/opt/airflow/dags/task.template"
+        ]
+
+    spark_files = list_spark_jobs()
+    
+    submit_jobs = CustomSparkKubernetesOperator.partial(
+        task_id="submit_spark_job",  # Airflow will auto-append index like submit_spark_job__0
+        namespace="default",
+        do_xcom_push=False,
+    ).expand(application_file=spark_files)
