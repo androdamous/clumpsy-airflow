@@ -1,0 +1,6 @@
+table_name: sample_table
+table_qualified_name: sample_table@card
+path: /opt/airflow/plugins/sample_table/20250413/data.csv
+partition_date: '20250413'
+load_status: success
+load_timestamp: '2025-04-13T15:33:53Z'
