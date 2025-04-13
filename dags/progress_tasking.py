@@ -1,7 +1,7 @@
 # simple_dag.py
 from datetime import datetime, timedelta
 import time
-from airflow import DAG
+from airflow import DAG, Dataset
 from airflow.operators.python import PythonOperator
 from airflow.decorators import task
 
@@ -22,23 +22,32 @@ default_args = {
     'retry_delay': timedelta(minutes=5),
 }
 
+qualified_names = [
+    'cred.table@vcbcard',
+    'debit.table@vcbcard',
+    'loan.table@vcbcard',
+    'saving.table@vcbcard']
+
+datasets = [Dataset(qualified_name) for qualified_name in qualified_names]
 # Instantiate the DAG
 with DAG(
     dag_id='simple_dag',
     default_args=default_args,
     description='A simple DAG example that passes values between tasks',
-    schedule_interval=timedelta(days=1),
+    schedule=[Dataset("fetch_etl")],
     catchup=False,
     max_active_runs=3,
     concurrency=3,
     
 ) as dag:
+    
 
     # Task 1: Get the source name using an initial input value
     task_get_source_name = PythonOperator(
         task_id='get_source_name',
         python_callable=get_source_name,
-        op_kwargs={'input_value': 'Initial Input Value'}
+        op_kwargs={'input_value': 'Initial Input Value'},
+        inlets=[Dataset("fetch_etl")],
     )
 
     # Task 2: Configure ETL based on the source name
